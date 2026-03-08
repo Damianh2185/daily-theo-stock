@@ -144,7 +144,8 @@ st.markdown(
     '<div class="upload-card">'
     "<h3>📂 Archivo principal de productos</h3>"
     "<p>Este archivo debe contener al menos las columnas: "
-    "<strong>Clave</strong>, <strong>Producto</strong> e "
+    "<strong>Clave</strong>, <strong>Producto</strong>, "
+    "<strong>Unidad de Medida</strong> e "
     "<strong>Inventarios Teóricos</strong>.</p>"
     "</div>",
     unsafe_allow_html=True,
@@ -203,7 +204,7 @@ if procesar:
             st.stop()
 
     # ── Validación de columnas ───────────────────────────────
-    columnas_requeridas = {"Clave", "Producto", "Inventarios Teóricos"}
+    columnas_requeridas = {"Clave", "Producto", "Unidad de Medida", "Inventarios Teóricos"}
     columnas_faltantes = columnas_requeridas - set(df_principal.columns)
 
     if columnas_faltantes:
@@ -234,7 +235,7 @@ if procesar:
     with st.spinner("Filtrando productos…"):
         lista_claves = df_claves["Clave"].dropna().unique().tolist()
         resultado = df_principal[df_principal["Clave"].isin(lista_claves)].copy()
-        resultado = resultado[["Clave", "Producto", "Inventarios Teóricos"]]
+        resultado = resultado[["Clave", "Producto", "Unidad de Medida", "Inventarios Teóricos"]]
 
     # ── Resultados ───────────────────────────────────────────
     total_principal = len(df_principal)
@@ -304,3 +305,5 @@ st.markdown(
     "</p>",
     unsafe_allow_html=True,
 )
+
+
