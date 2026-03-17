@@ -15,114 +15,271 @@ from openpyxl.utils import get_column_letter
 
 # ── Configuración de la página ──────────────────────────────
 st.set_page_config(
-    page_title="Filtro de Productos por Clave",
+    page_title="Filtro de Productos · Inventario Pro",
     page_icon="📦",
-    layout="centered",
+    layout="wide",
 )
 
 # ── Estilos personalizados ──────────────────────────────────
 st.markdown(
     """
     <style>
-    /* Tipografía general */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    /* ═══ Tipografía y base ═══ */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
 
-    /* Encabezado principal */
-    .main-title {
-        text-align: center;
-        font-size: 2.4rem;
-        font-weight: 700;
+    /* ═══ Ocultar decoración nativa de Streamlit ═══ */
+    #MainMenu, footer, header { visibility: hidden; }
+    .block-container { padding-top: 1.5rem; max-width: 960px; margin: auto; }
+
+    /* ═══ Header ═══ */
+    .app-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        margin-bottom: 1.2rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .app-header-icon {
+        width: 42px;
+        height: 42px;
         background: linear-gradient(135deg, #1e3a5f, #4a90d9);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        text-align: center;
-        color: #666;
-        font-size: 1.05rem;
-        margin-bottom: 2rem;
-    }
-
-    /* Cards para las secciones de carga */
-    .upload-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
     }
-    .upload-card h3 {
-        margin-top: 0;
-        color: #1e3a5f;
+    .app-header-text h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+        line-height: 1.3;
+    }
+    .app-header-text p {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        margin: 0;
+        font-weight: 400;
     }
 
-    /* Botón de procesar */
+    /* ═══ Section titles ═══ */
+    .section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #8ca3bf;
+        margin-bottom: 0.8rem;
+        padding-left: 2px;
+    }
+
+    /* ═══ Mode selector pills ═══ */
+    .mode-wrapper {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1.2rem;
+        border: 1px solid #e2e8f0;
+    }
+    div.stRadio > div { gap: 0.5rem; }
+    div.stRadio > div > label {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.7rem 1.2rem !important;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    div.stRadio > div > label:hover {
+        border-color: #4a90d9;
+        background: #f0f7ff;
+    }
+    div.stRadio > div > label[data-checked="true"],
+    div.stRadio > div > label[aria-checked="true"] {
+        background: linear-gradient(135deg, #1e3a5f, #2c5364);
+        color: white;
+        border-color: #1e3a5f;
+    }
+
+    /* ═══ Upload cards ═══ */
+    .upload-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem 1.8rem;
+        margin-bottom: 1.2rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .upload-card:hover {
+        border-color: #4a90d9;
+        box-shadow: 0 4px 20px rgba(74,144,217,0.12);
+        transform: translateY(-1px);
+    }
+    .upload-card .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 0.6rem;
+    }
+    .upload-card .card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .upload-card .card-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+    .upload-card .card-icon.amber { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .upload-card .card-icon.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .upload-card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .upload-card p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #64748b;
+        line-height: 1.4;
+    }
+    .upload-card .tag {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        margin-right: 0.3rem;
+        margin-top: 0.4rem;
+    }
+
+    /* ═══ Process button ═══ */
     div.stButton > button {
         width: 100%;
-        background: linear-gradient(135deg, #1e3a5f, #4a90d9);
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5364 50%, #4a90d9 100%);
+        background-size: 200% auto;
         color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
-        padding: 0.75rem;
+        font-weight: 700;
+        font-size: 1.05rem;
+        padding: 0.85rem 1.5rem;
         border: none;
-        border-radius: 10px;
+        border-radius: 14px;
         cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(30, 58, 95, 0.25);
     }
     div.stButton > button:hover {
+        background-position: right center;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(74, 144, 217, 0.35);
+        box-shadow: 0 8px 25px rgba(30, 58, 95, 0.35);
+    }
+    div.stButton > button:active {
+        transform: translateY(0);
     }
 
-    /* Métricas */
+    /* ═══ Download button ═══ */
+    div.stDownloadButton > button {
+        width: 100%;
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        font-weight: 700;
+        font-size: 1.05rem;
+        padding: 0.85rem 1.5rem;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(5, 150, 105, 0.25);
+    }
+    div.stDownloadButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.35);
+    }
+
+    /* ═══ Metrics ═══ */
     .metric-row {
         display: flex;
         gap: 1rem;
-        margin: 1rem 0;
+        margin: 1.2rem 0;
     }
     .metric-box {
         flex: 1;
-        background: linear-gradient(135deg, #eef4fb, #d6e6f9);
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.2rem 1rem;
         text-align: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .metric-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .metric-box .icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
     }
     .metric-box .number {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #1e3a5f;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        letter-spacing: -1px;
     }
     .metric-box .label {
-        font-size: 0.85rem;
-        color: #4a6a8a;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-top: 0.15rem;
     }
 
-    /* Mode selector card */
-    .mode-card {
-        background: linear-gradient(135deg, #f0f7ff, #e8f0fe);
-        border: 2px solid #4a90d9;
-        border-radius: 14px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+    /* ═══ Divider ═══ */
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+
+    /* ═══ Footer ═══ */
+    .app-footer {
+        text-align: center;
+        padding: 1.5rem 0 1rem;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        font-weight: 500;
     }
-    .mode-card h3 {
-        margin-top: 0;
-        color: #1e3a5f;
+    .app-footer span { color: #ef4444; }
+
+    /* ═══ Expander styling ═══ */
+    .streamlit-expanderHeader {
+        font-weight: 600;
+        font-size: 0.9rem;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ── Encabezado ──────────────────────────────────────────────
-st.markdown('<p class="main-title">📦 Filtro de Productos por Clave</p>', unsafe_allow_html=True)
+# ── Encabezado ───────────────────────────────────────────────
 st.markdown(
-    '<p class="sub-title">'
-    "Sube un archivo principal de productos y filtra usando claves manuales "
-    "o la lista predeterminada de artículos de inventario."
-    "</p>",
+    """
+    <div class="app-header">
+        <div class="app-header-icon">📦</div>
+        <div class="app-header-text">
+            <h1>Filtro de Productos</h1>
+            <p>Sube tu archivo principal y filtra con claves manuales o artículos predeterminados</p>
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -318,31 +475,32 @@ def generar_excel_inventario(df: pd.DataFrame) -> bytes:
 
 
 # ── Selector de modo ────────────────────────────────────────
-st.markdown(
-    '<div class="mode-card">'
-    "<h3>⚙️ Modo de operación</h3>"
-    "<p>Selecciona cómo deseas filtrar los productos.</p>"
-    "</div>",
-    unsafe_allow_html=True,
-)
+st.markdown('<div class="mode-wrapper">', unsafe_allow_html=True)
 
 modo = st.radio(
     "Selecciona el modo de operación:",
     options=["📂 Carga Manual (subir dos archivos)", "📋 Artículos Predeterminados (Inventario)"],
     index=0,
+    horizontal=True,
     help="Carga Manual: sube ambos archivos. Predeterminados: solo sube el archivo principal y se filtran los artículos ya cargados.",
 )
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 es_modo_predeterminado = "Predeterminados" in modo
 
 # ── Sección 1: Archivo principal ────────────────────────────
 st.markdown(
     '<div class="upload-card">'
-    "<h3>📂 Archivo principal de productos</h3>"
-    "<p>Este archivo debe contener al menos las columnas: "
-    "<strong>Clave</strong>, <strong>Producto</strong>, "
-    "<strong>Unidad de Medida</strong> e "
-    "<strong>Inventarios Teóricos</strong>.</p>"
+    '<div class="card-header">'
+    '<div class="card-icon blue">📂</div>'
+    '<div><h3>Archivo principal de productos</h3></div>'
+    '</div>'
+    '<p>Este archivo debe contener las columnas requeridas para el procesamiento.</p>'
+    '<span class="tag">Clave</span>'
+    '<span class="tag">Producto</span>'
+    '<span class="tag">Unidad de Medida</span>'
+    '<span class="tag">Inventarios Teóricos</span>'
     "</div>",
     unsafe_allow_html=True,
 )
@@ -356,9 +514,12 @@ archivo_principal = st.file_uploader(
 if not es_modo_predeterminado:
     st.markdown(
         '<div class="upload-card">'
-        "<h3>🔑 Archivo con claves a buscar</h3>"
-        "<p>Este archivo debe contener al menos la columna "
-        "<strong>Clave</strong>.</p>"
+        '<div class="card-header">'
+        '<div class="card-icon amber">🔑</div>'
+        '<div><h3>Archivo con claves a buscar</h3></div>'
+        '</div>'
+        '<p>Este archivo debe contener al menos la columna Clave.</p>'
+        '<span class="tag">Clave</span>'
         "</div>",
         unsafe_allow_html=True,
     )
@@ -370,7 +531,17 @@ if not es_modo_predeterminado:
 else:
     archivo_claves = None
     # Mostrar vista previa de los artículos predeterminados
-    with st.expander(f"📋 Ver {len(ARTICULOS_DEFAULT)} artículos predeterminados cargados"):
+    st.markdown(
+        '<div class="upload-card">'
+        '<div class="card-header">'
+        '<div class="card-icon green">📋</div>'
+        '<div><h3>' + str(len(ARTICULOS_DEFAULT)) + ' artículos predeterminados cargados</h3></div>'
+        '</div>'
+        '<p>Los artículos de inventario ya están configurados. Expande para ver el detalle.</p>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    with st.expander("🔍 Ver detalle de artículos predeterminados"):
         df_preview = pd.DataFrame(ARTICULOS_DEFAULT)
         st.dataframe(df_preview, use_container_width=True, height=300)
 
@@ -460,14 +631,17 @@ if procesar:
             f"""
             <div class="metric-row">
                 <div class="metric-box">
+                    <div class="icon">📊</div>
                     <div class="number">{total_principal:,}</div>
-                    <div class="label">Productos en archivo principal</div>
+                    <div class="label">Productos en archivo</div>
                 </div>
                 <div class="metric-box">
+                    <div class="icon">📋</div>
                     <div class="number">{total_predeterminados:,}</div>
-                    <div class="label">Artículos predeterminados</div>
+                    <div class="label">Art. predeterminados</div>
                 </div>
                 <div class="metric-box">
+                    <div class="icon">✅</div>
                     <div class="number">{total_encontrados_unicos:,}</div>
                     <div class="label">Códigos encontrados</div>
                 </div>
@@ -541,14 +715,17 @@ if procesar:
             f"""
             <div class="metric-row">
                 <div class="metric-box">
+                    <div class="icon">📊</div>
                     <div class="number">{total_principal:,}</div>
-                    <div class="label">Productos en archivo principal</div>
+                    <div class="label">Productos en archivo</div>
                 </div>
                 <div class="metric-box">
+                    <div class="icon">🔑</div>
                     <div class="number">{total_claves:,}</div>
                     <div class="label">Claves a buscar</div>
                 </div>
                 <div class="metric-box">
+                    <div class="icon">✅</div>
                     <div class="number">{total_encontrados:,}</div>
                     <div class="label">Productos encontrados</div>
                 </div>
@@ -591,8 +768,9 @@ if procesar:
 # ── Footer ──────────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
-    '<p style="text-align:center; color:#aaa; font-size:0.85rem;">'
-    "Filtro de Productos por Clave · Hecho con ❤️ y Streamlit"
-    "</p>",
+    '<div class="app-footer">'
+    "Inventario Pro · Filtro de Productos por Clave<br>"
+    "Hecho con <span>❤️</span> y Streamlit"
+    "</div>",
     unsafe_allow_html=True,
 )
